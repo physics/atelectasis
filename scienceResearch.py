@@ -24,13 +24,9 @@ print(tf.__version__)
 print(tf.__version__)
 
 def process():
-    
-    buffer = 20
-
-    train_images = np.array([])
-    train_labels = np.array([])
-    # testImages = []
-    # testLabels = []
+    buffer = 8100
+    train_images = []
+    train_labels = []
 
     normal = []
     fname = "normal.txt"
@@ -48,84 +44,90 @@ def process():
 
     normalPtr = 0
     badPtr = 0
-
+    counter = 0
+    othercounter = 0
     for i in range(buffer):
+        othercounter = othercounter + 1
         x = random.uniform(0, 1)
         if (x < 0.5) and normalPtr < len(normal):
-            # print("In normal if loop." + " " + str(x))
-            #im_frame = Image.open("./Normal/" + normal[normalPtr])
-            #np_frame = np.array(im_frame.getdata())
-            np_frame = imageio.imread("./Normal/" + normal[normalPtr] )
-            np_frame = np_frame/255
-            '''
-            print("----123----")
-            print(normal[normalPtr])
-            print(np_frame)
-            print(np_frame.shape)
-            print("----456----")
-            '''
-            # print("Np_frame shape: " + str(np_frame.shape))
-            np_frame = cv2.resize(np_frame,(256,256))
-            train_images.append(np_frame)
-            train_labels.append(0)
-            normalPtr = normalPtr + 1
-        if(x > 0.5) and badPtr < len(atelectasis):
-            # print("In diseased if loop." + " " + str(x))
-            #im_frame = Image.open("./Atelectasis/" + atelectasis[badPtr])
-            #np_frame = np.array(im_frame.getdata())
-            np_frame = imageio.imread("./Atelectasis/" + atelectasis[badPtr])
-            # imgplot = plt.imshow(np_frame)
-            #print(np_frame)
-            np_frame = np_frame/255
-            np_frame = cv2.resize(np_frame,(256,256))
-            train_images.append(np_frame)
-            train_labels.append(1)
+            try:
+                # print("In normal if loop." + " " + str(
+                #im_frame = Image.open("./Normal/" + normal[normalPtr])
+                #np_frame = np.array(im_frame.getdata())
+                print("./Normal/" + normal[normalPtr]) 
+                np_frame = imageio.imread("./Normal/" + normal[normalPtr])
+                np_frame = np_frame/255
+                print(normalPtr, "works")
+                # print("Np_frame shape: " + str(np_frame.shape))
+                np_frame = cv2.resize(np_frame,(256,256))
+                train_images.append(np_frame)
+                train_labels.append(0)
+                normalPtr = normalPtr + 1
+                counter = counter + 1
+                
+            except:
+                normalPtr = normalPtr + 1
+                pass
             
-            badPtr = badPtr + 1
-            
-        '''
-        x = random.randint(0, 1)
-
-        if (x < 0.5) and normalPtr < len(normal):
-            im_frame = Image.open("./Normal/" + normal[normalPtr])
-            np_frame = np.array(im_frame.getdata())
-            np_frame = np_frame/255
-            np_frame = cv2.resize(np_frame,(256,256))
-            testImages.append(np_frame)
-            testLabels.append(0)
-            normalPtr = normalPtr + 1
         if (x > 0.5) and badPtr < len(atelectasis):
-            im_frame = Image.open("./Atelectasis/" + atelectasis[badPtr])
-            np_frame = np.array(im_frame.getdata())
-            np_frame = np_frame/255
-            np_frame = cv2.resize(np_frame,(256,256))
-            testImages.append(np_frame)
-            testLabels.append(1)
-            badPtr = badPtr + 1
-        '''
+            try:
+                print("not good yet")
+                # print("In diseased if loop." + " " + str(x))
+                #im_frame = Image.open("./Atelectasis/" + atelectasis[badPtr])
+                #np_frame = np.array(im_frame.getdata())
+                np_frame = imageio.imread("./Atelectasis/" + atelectasis[badPtr])
+                print("good")
+                #imgplot = plt.imshow(np_frame)
+                #print(np_frame)
+                np_frame = np_frame/255
+                np_frame = cv2.resize(np_frame,(256,256))
 
-    # test_images = np.asarray(testImages)
-    # test_labels = np.asarray(testLabels)
-    print(train_images.shape)
+                train_images.append(np_frame)
+                train_labels.append(1)
+                counter = counter + 1
+                badPtr = badPtr + 1
+                
+            except:
+                badPtr = badPtr + 1
+                pass
+
+    print(len(atelectasis))
+    print(len(normal))
+    print(atelectasis[3000])
+    print(atelectasis[10])
+
+    print(badPtr)
+    train_images = np.asarray(train_images)
+    train_labels = np.asarray(train_labels)
+    
+    print(counter)
+    print(othercounter)
+    print(train_images.shape)   
     return train_images, train_labels
     # , test_images, test_labels
 
+
 train_images, train_labels = process()
-# , test_images, test_labels 
+
 
 model = keras.Sequential([
-    keras.layers.Flatten(input_shape=(256, 256)),
-    keras.layers.Dense(128, activation=tf.nn.relu),
-    keras.layers.Dense(10, activation=tf.nn.softmax)
+    keras.layers.Reshape((256, 256, 1), input_shape=(256, 256)),
+    keras.layers.Conv2D(64, kernel_size=3, activation='relu', input_shape=(256,256,1)),
+    keras.layers.Conv2D(32, kernel_size=3, activation='relu'),
+    keras.layers.Flatten(),
+    keras.layers.Dense(2, activation='softmax')
 ])
 
-model.compile(optimizer=tf.train.AdamOptimizer(),
+
+model.compile(optimizer=keras.optimizers.SGD(lr=0.00001, momentum=0.9, decay=1e-6, nesterov=True),
               loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
+              metrics=['accuracy']) 
 
 
 model.summary()
-model.fit(train_images, train_labels, epochs=5)
+model.fit(train_images, train_labels, epochs=20)
+
+model.save_weights('./checkpoints/my_checkpoint')
 
 # test_loss, test_acc = model.evaluate(test_images, test_labels)
 
