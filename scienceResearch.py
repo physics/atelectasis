@@ -54,10 +54,8 @@ def process():
                 # print("In normal if loop." + " " + str(
                 #im_frame = Image.open("./Normal/" + normal[normalPtr])
                 #np_frame = np.array(im_frame.getdata())
-                print("./Normal/" + normal[normalPtr]) 
                 np_frame = imageio.imread("./Normal/" + normal[normalPtr])
                 np_frame = np_frame/255
-                print(normalPtr, "works")
                 # print("Np_frame shape: " + str(np_frame.shape))
                 np_frame = cv2.resize(np_frame,(256,256))
                 train_images.append(np_frame)
@@ -71,12 +69,10 @@ def process():
             
         if (x > 0.5) and badPtr < len(atelectasis):
             try:
-                print("not good yet")
                 # print("In diseased if loop." + " " + str(x))
                 #im_frame = Image.open("./Atelectasis/" + atelectasis[badPtr])
                 #np_frame = np.array(im_frame.getdata())
                 np_frame = imageio.imread("./Atelectasis/" + atelectasis[badPtr])
-                print("good")
                 #imgplot = plt.imshow(np_frame)
                 #print(np_frame)
                 np_frame = np_frame/255
